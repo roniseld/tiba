@@ -1,0 +1,25 @@
+{
+  "name": "tiba",
+  "version": "1.0.0",
+  "private": true,
+  "description": "תיבת הדילמות — פלטפורמת שאלות ומענה מקצועי למתנדבים",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
+    "jose": "^6.2.11",
+    "next": "^15.5.25",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
