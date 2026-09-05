@@ -10,7 +10,8 @@ export async function POST(req: Request) {
   if (!phone) return NextResponse.json({ error: "מספר הטלפון לא תקין. צריך מספר נייד ישראלי." }, { status: 400 });
 
   // חסום משתמשים חסומים
-  const { data: user } = await db().from("users").select("status").eq("phone", phone).maybeSingle();
+  const { data: user, error: userErr } = await db().from("users").select("status").eq("phone", phone).maybeSingle();
+  if (userErr) return NextResponse.json({ error: "שגיאת מסד נתונים: " + userErr.message + " — בדוק את SUPABASE_URL ואת SUPABASE_SERVICE_ROLE_KEY ב-Vercel" }, { status: 500 });
   if (user?.status === "blocked") return NextResponse.json({ error: "החשבון חסום. פנה למנהל האזור." }, { status: 403 });
 
   // הגבלת קצב: לא יותר מקוד אחד בכל 45 שניות, ולא יותר מ-6 בשעה
@@ -26,11 +27,12 @@ export async function POST(req: Request) {
   }
 
   const code = generateCode();
-  await db().from("otp_codes").insert({
+  const { error: insErr } = await db().from("otp_codes").insert({
     phone,
     code_hash: hashCode(phone, code),
     expires_at: new Date(Date.now() + OTP_TTL_MINUTES * 60e3).toISOString(),
   });
+  if (insErr) return NextResponse.json({ error: "שגיאת מסד נתונים בשמירת הקוד: " + insErr.message }, { status: 500 });
 
   const res = await sendSms(phone, `קוד הכניסה שלך לתיבת הדילמות: ${code}\nתקף ל-${OTP_TTL_MINUTES} דקות.`);
   await db().from("notifications").insert({

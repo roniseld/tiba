@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const phone = raw ? normalizeIsraeliPhone(raw) : null;
   if (!phone || !code || !/^\d{6}$/.test(code)) return NextResponse.json({ error: "קוד לא תקין" }, { status: 400 });
 
-  const { data: otp } = await db()
+  const { data: otp, error: otpErr } = await db()
     .from("otp_codes")
     .select("*")
     .eq("phone", phone)
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     .limit(1)
     .maybeSingle();
 
-  if (!otp) return NextResponse.json({ error: "הקוד פג תוקף. בקש קוד חדש." }, { status: 400 });
+  if (otpErr) return NextResponse.json({ error: "שגיאת מסד נתונים: " + otpErr.message }, { status: 500 });
+  if (!otp) return NextResponse.json({ error: "לא נמצא קוד תקף למספר הזה. בקש קוד חדש." }, { status: 400 });
   if (otp.attempts >= OTP_MAX_ATTEMPTS) return NextResponse.json({ error: "יותר מדי ניסיונות. בקש קוד חדש." }, { status: 429 });
 
   if (otp.code_hash !== hashCode(phone, code)) {
