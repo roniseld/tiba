@@ -81,7 +81,7 @@ export default async function QuestionPage({ params, searchParams }: { params: P
           <button className="btn">שלח תשובה</button>
           {q.status === "claimed" ? (
             <div style={{ marginTop: 8 }}>
-              <button className="btn ghost sm" formAction={releaseAction}>שחרר את השאלה לעונה אחר</button>
+              <button className="btn ghost sm" formAction={releaseAction} formNoValidate>שחרר את השאלה לעונה אחר</button>
             </div>
           ) : null}
         </form>
@@ -104,7 +104,7 @@ export default async function QuestionPage({ params, searchParams }: { params: P
           </div>
           <div className="row">
             <button className="btn ghost sm">שלח שאלת המשך</button>
-            <button className="btn ghost sm" formAction={closeAction}>התשובה עזרה, לסגור</button>
+            <button className="btn ghost sm" formAction={closeAction} formNoValidate>התשובה עזרה, לסגור</button>
           </div>
         </form>
       ) : null}
