@@ -12,15 +12,37 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [devCode, setDevCode] = useState("");
 
+  // קריאה לשרת עם טיפול בשגיאות: גם אם השרת מחזיר עמוד שגיאה (לא JSON) או לא עונה, המשתמש יראה הודעה
+  async function call(path: string, body: unknown): Promise<{ ok: boolean; data: Record<string, string> }> {
+    try {
+      const r = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(25000),
+      });
+      const text = await r.text();
+      let data: Record<string, string> = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: `השרת החזיר שגיאה ${r.status}. בדוק את /api/health ואת ה-Logs ב-Vercel.` };
+      }
+      return { ok: r.ok, data };
+    } catch (e) {
+      const timedOut = e instanceof Error && e.name === "TimeoutError";
+      return { ok: false, data: { error: timedOut ? "השרת לא ענה בזמן. בדרך כלל: כתובת Supabase שגויה או פרויקט Supabase מושהה. בדוק את /api/health." : "אין חיבור לשרת. בדוק את החיבור לאינטרנט ונסה שוב." } };
+    }
+  }
+
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const r = await fetch("/api/auth/send-code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) });
-    const j = await r.json();
+    const { ok, data } = await call("/api/auth/send-code", { phone });
     setBusy(false);
-    if (!r.ok) return setError(j.error || "שגיאה");
-    if (j.devCode) setDevCode(j.devCode);
+    if (!ok) return setError(data.error || "שגיאה");
+    if (data.devCode) setDevCode(data.devCode);
     setStep("code");
   }
 
@@ -28,11 +50,10 @@ export default function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const r = await fetch("/api/auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone, code }) });
-    const j = await r.json();
+    const { ok, data } = await call("/api/auth/verify", { phone, code });
     setBusy(false);
-    if (!r.ok) return setError(j.error || "שגיאה");
-    router.replace(j.next || "/");
+    if (!ok) return setError(data.error || "שגיאה");
+    router.replace(data.next || "/");
     router.refresh();
   }
 
