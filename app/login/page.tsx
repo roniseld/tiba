@@ -60,7 +60,9 @@ export default function LoginPage() {
   return (
     <div className="app">
       <div className="login">
-        <h2>תיבת הדילמות</h2>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="איחוד הצלה" style={{ width: 84, height: 84, objectFit: "contain", marginBottom: 12 }} />
+        <h2>אני רק שאלה...</h2>
         <p>שאלות ודילמות מקצועיות מהשטח, ומענה מעונים מוסמכים. כניסה עם קוד חד-פעמי לטלפון.</p>
         {error ? <div className="error">{error}</div> : null}
         {step === "phone" ? (
