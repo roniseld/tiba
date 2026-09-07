@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 // דפים פתוחים ללא כניסה
-const PUBLIC = ["/login", "/api/auth", "/api/cron", "/api/health", "/manifest.webmanifest", "/icon.svg"];
+const PUBLIC = ["/login", "/api/auth", "/api/cron", "/api/health", "/api/icon", "/manifest.webmanifest", "/icon.svg"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
