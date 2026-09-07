@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LOGO_DATA_URL } from "@/lib/logo-data";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function LoginPage() {
     <div className="app">
       <div className="login">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="איחוד הצלה" style={{ width: 84, height: 84, objectFit: "contain", marginBottom: 12 }} />
+        <img src={LOGO_DATA_URL} alt="איחוד הצלה" style={{ width: 84, height: 84, objectFit: "contain", marginBottom: 12 }} />
         <h2>אני רק שאלה...</h2>
         <p>שאלות ודילמות מקצועיות מהשטח, ומענה מעונים מוסמכים. כניסה עם קוד חד-פעמי לטלפון.</p>
         {error ? <div className="error">{error}</div> : null}
