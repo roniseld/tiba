@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: { default: "אני רק שאלה...", template: "%s · אני רק שאלה..." },
   description: "שאלות ודילמות מקצועיות למתנדבים, ומענה מעונים מוסמכים",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: { icon: "/api/icon/192", apple: "/api/icon/180" },
   appleWebApp: { capable: true, title: "אני רק שאלה...", statusBarStyle: "default" },
 };
 
