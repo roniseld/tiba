@@ -59,6 +59,7 @@ create table if not exists messages (
   author_id uuid not null references users(id),
   kind text not null check (kind in ('answer','followup')),
   body text not null,
+  consulted_with text,                        -- "בהתייעצות עם" (גורם חיצוני שאינו רשום במערכת)
   created_at timestamptz not null default now()
 );
 create index if not exists messages_q_idx on messages(question_id, created_at);
