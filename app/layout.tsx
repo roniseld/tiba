@@ -2,15 +2,15 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "תיבת הדילמות", template: "%s · תיבת הדילמות" },
+  title: { default: "אני רק שאלה...", template: "%s · אני רק שאלה..." },
   description: "שאלות ודילמות מקצועיות למתנדבים, ומענה מעונים מוסמכים",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
-  appleWebApp: { capable: true, title: "תיבת הדילמות", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "אני רק שאלה...", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#D9601A",
+  themeColor: "#F26E2D",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
