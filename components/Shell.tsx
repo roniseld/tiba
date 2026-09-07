@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@/lib/types";
 import { APP_NAME, ROLE_LABEL } from "@/lib/types";
+import { LOGO_DATA_URL } from "@/lib/logo-data";
 
 const ICONS: Record<string, React.ReactNode> = {
   mine: <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z" /></svg>,
@@ -29,7 +30,7 @@ export default function Shell({ user, active, openCount = 0, children }: { user:
       <header className="top">
         <div className="brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="איחוד הצלה" />
+          <img src={LOGO_DATA_URL} alt="איחוד הצלה" />
           <div>
           <h1>{APP_NAME}</h1>
           <div className="who">
