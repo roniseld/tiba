@@ -20,8 +20,9 @@ export async function countOpen(): Promise<number> {
   return count ?? 0;
 }
 
-export async function listKnowledgeBase(query: string): Promise<Question[]> {
+export async function listKnowledgeBase(query: string, category = ""): Promise<Question[]> {
   let req = db().from("questions").select(Q_SELECT).eq("in_kb", true).in("status", ["answered", "closed"]).order("answered_at", { ascending: false });
+  if (category) req = req.eq("category", category);
   if (query.trim()) {
     const q = query.trim().replace(/[%_,]/g, " ");
     req = req.or(`title.ilike.%${q}%,body.ilike.%${q}%,category.ilike.%${q}%`);
