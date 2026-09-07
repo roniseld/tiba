@@ -44,18 +44,28 @@ export interface Message {
   author_id: string;
   kind: "answer" | "followup";
   body: string;
+  consulted_with: string | null;
   created_at: string;
   author?: Pick<User, "id" | "name" | "role">;
 }
 
+export const APP_NAME = "אני רק שאלה...";
+
 export const CATEGORIES = [
-  "פרוטוקול טיפול",
-  "תרופות ומינונים",
-  "התנהלות באירוע",
+  "החייאה",
+  "קרדיאלי",
+  "נשימתי",
+  "נוירולוגי",
+  "ילדים",
+  "הריון ולידה",
+  "מונחים רפואיים",
   "ציוד",
-  "אתיקה ומשפט",
   "אחר",
 ] as const;
+
+export const CATEGORY_HINT: Partial<Record<(typeof CATEGORIES)[number], string>> = {
+  "ילדים": "כלל המקרים הנוגעים לילד",
+};
 
 export const TEAMS = ["רעננה", "הרצליה", "רמת השרון", "חוף השרון"] as const;
 
