@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser, requireActiveUser } from "@/lib/auth";
 import { appUrl, getAnswerers, getManagers, notifyMany, notifyUser } from "@/lib/notify";
 import { normalizeIsraeliPhone } from "@/lib/phone";
-import { CATEGORIES, TEAMS, type Question, type Role, type User, type UserStatus } from "@/lib/types";
+import { CATEGORIES, ROLE_LABEL, TEAMS, type Question, type Role, type User, type UserStatus } from "@/lib/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const bool = (fd: FormData, k: string) => fd.get(k) === "on";
@@ -30,7 +30,7 @@ export async function registerAction(fd: FormData) {
     await notifyMany(managers, {
       event: "registration",
       subject: "מתנדב חדש ממתין לאישור",
-      text: `${name}${team ? ` (${team})` : ""} נרשם לתיבת הדילמות וממתין לאישורך.`,
+      text: `${name}${team ? ` (${team})` : ""} נרשם ל"אני רק שאלה..." וממתין לאישורך.`,
       link: appUrl("/admin"),
     });
   }
@@ -79,7 +79,7 @@ export async function askAction(fd: FormData) {
     {
       event: "new_question",
       subject: `שאלה חדשה בתיבה: ${title}`,
-      text: `שאלה חדשה בתיבת הדילמות (${category}) מאת ${me.name}${me.team ? ` · ${me.team}` : ""}:\n"${title}"`,
+      text: `שאלה חדשה ב"אני רק שאלה..." (${category}) מאת ${me.name}${me.team ? ` · ${me.team}` : ""}:\n"${title}"`,
       link: appUrl(`/q/${q.id}`),
       questionId: q.id,
     },
@@ -104,7 +104,7 @@ export async function claimAction(fd: FormData) {
     .update({ status: "claimed", claimed_by: me.id, claimed_at: new Date().toISOString() })
     .eq("id", id)
     .eq("status", "new")
-    .select("title")
+    .select("title, asker:users!questions_asker_id_fkey(*)")
     .maybeSingle();
   if (data) {
     const others = (await getAnswerers()).filter((u) => u.id !== me.id);
@@ -114,6 +114,18 @@ export async function claimAction(fd: FormData) {
       text: `${me.name} לקח/ה את השאלה "${data.title}". אין צורך לענות עליה.`,
       questionId: id,
     });
+    // עדכון לשואל: מי מטפל בשאלה שלו
+    const asker = data.asker as unknown as User | null;
+    if (asker && asker.id !== me.id) {
+      await notifyUser(asker, {
+        event: "claimed",
+        subject: `השאלה שלך בטיפול: ${data.title}`,
+        text: `${me.name} (${ROLE_LABEL[me.role]}) לקח/ה את השאלה שלך "${data.title}" ומטפל/ת בה. תקבל/י הודעה כשתהיה תשובה.`,
+        link: appUrl(`/q/${id}`),
+        questionId: id,
+        channels: ["sms"],
+      });
+    }
   }
   revalidatePath(`/q/${id}`);
   redirect(`/q/${id}`);
@@ -136,13 +148,18 @@ export async function answerAction(fd: FormData) {
   const id = str(fd, "id");
   const body = str(fd, "body");
   const inKb = bool(fd, "in_kb");
+  const consulted = str(fd, "consulted_with").slice(0, 120) || null;
   if (body.length < 2) redirect(`/q/${id}?error=empty`);
   const q = await loadQ(id);
   if (!q) redirect("/queue");
   // עונה יכול לענות אם השאלה שלו, או חדשה (תפיסה מרומזת), או שהוא מנהל
   if (q.status === "claimed" && q.claimed_by !== me.id && me.role !== "manager") redirect(`/q/${id}?error=taken`);
 
-  await db().from("messages").insert({ question_id: id, author_id: me.id, kind: "answer", body });
+  const ins = await db().from("messages").insert({ question_id: id, author_id: me.id, kind: "answer", body, consulted_with: consulted });
+  if (ins.error) {
+    // תאימות לאחור: אם העמודה consulted_with עדיין לא נוספה למסד הנתונים (migration-002), שומרים את ההתייעצות בגוף התשובה
+    await db().from("messages").insert({ question_id: id, author_id: me.id, kind: "answer", body: consulted ? `${body}\n\n(בהתייעצות עם ${consulted})` : body });
+  }
   await db()
     .from("questions")
     .update({ status: "answered", claimed_by: q.claimed_by ?? me.id, answered_at: q.answered_at ?? new Date().toISOString(), in_kb: inKb })
@@ -152,7 +169,7 @@ export async function answerAction(fd: FormData) {
   await notifyUser(asker, {
     event: "answered",
     subject: `יש תשובה לשאלה שלך: ${q.title}`,
-    text: `${me.name} ענה/תה על השאלה שלך "${q.title}" בתיבת הדילמות.`,
+    text: `${me.name} (${ROLE_LABEL[me.role]})${consulted ? `, בהתייעצות עם ${consulted},` : ""} ענה/תה על השאלה שלך "${q.title}".`,
     link: appUrl(`/q/${id}`),
     questionId: id,
     channels: [...(q.notify_sms ? (["sms"] as const) : []), ...(q.notify_email && asker.email ? (["email"] as const) : [])],
@@ -222,8 +239,8 @@ export async function adminUpdateUserAction(fd: FormData) {
   if (before && before.status !== "active" && status === "active") {
     await notifyUser(before as User, {
       event: "approved",
-      subject: "אושרת לתיבת הדילמות",
-      text: `שלום ${before.name}, החשבון שלך בתיבת הדילמות אושר. אפשר להיכנס ולשאול.`,
+      subject: "אושרת לאני רק שאלה...",
+      text: `שלום ${before.name}, החשבון שלך ב"אני רק שאלה..." אושר. אפשר להיכנס ולשאול.`,
       link: appUrl("/"),
       channels: ["sms", ...(before.email ? (["email"] as const) : [])],
     });
