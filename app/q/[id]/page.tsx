@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/QuestionCard";
 import { guard } from "@/lib/page-guard";
 import { countOpen, getQuestion } from "@/lib/questions";
 import { ago, hoursBetween } from "@/lib/format";
+import { ROLE_LABEL } from "@/lib/types";
 import { answerAction, claimAction, closeAction, followUpAction, releaseAction, toggleKbAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function QuestionPage({ params, searchParams }: { params: P
   const open = isStaff ? await countOpen() : 0;
   const mineToAnswer = q.status === "claimed" && (q.claimed_by === me.id || me.role === "manager");
   const backHref = isStaff ? "/queue" : isAsker ? "/" : "/kb";
+  const lastConsult = [...messages].reverse().find((m) => m.kind === "answer" && m.consulted_with)?.consulted_with ?? null;
 
   return (
     <Shell user={me} active={isStaff ? "queue" : isAsker ? "mine" : "kb"} openCount={open}>
@@ -41,6 +43,13 @@ export default async function QuestionPage({ params, searchParams }: { params: P
         {q.answered_at ? <span className="num">נענתה תוך {hoursBetween(q.created_at, q.answered_at).toFixed(1)} שע׳</span> : null}
         {q.in_kb ? <span>· במאגר הידע</span> : null}
       </div>
+      {q.status === "claimed" && q.claimer ? <div className="answered-by">בטיפול: <b>{q.claimer.name}</b></div> : null}
+      {(q.status === "answered" || q.status === "closed") && q.claimer ? (
+        <div className="answered-by">
+          נענתה על ידי <b>{q.claimer.name}</b>
+          {lastConsult ? <> · בהתייעצות עם <b>{lastConsult}</b></> : null}
+        </div>
+      ) : null}
 
       <div className="thread">
         <div className="msg ask">
@@ -51,8 +60,12 @@ export default async function QuestionPage({ params, searchParams }: { params: P
         </div>
         {messages.map((m) => (
           <div key={m.id} className={`msg ${m.kind}`}>
-            <div className="by">{m.author?.name} · {ago(m.created_at)}</div>
+            <div className="by">
+              {m.author?.name}
+              {m.kind === "answer" && m.author?.role ? ` · ${ROLE_LABEL[m.author.role]}` : ""} · {ago(m.created_at)}
+            </div>
             {m.body}
+            {m.consulted_with ? <div className="consult">בהתייעצות עם {m.consulted_with}</div> : null}
           </div>
         ))}
       </div>
@@ -76,6 +89,11 @@ export default async function QuestionPage({ params, searchParams }: { params: P
           <div className="field">
             <label htmlFor="body">{q.status === "answered" ? "תשובה נוספת" : "התשובה שלך"}</label>
             <textarea id="body" name="body" placeholder="תשובה מקצועית, קצרה וברורה" required />
+          </div>
+          <div className="field">
+            <label htmlFor="consulted">בהתייעצות עם (לא חובה)</label>
+            <input id="consulted" name="consulted_with" maxLength={120} placeholder='למשל: ד"ר לוי, רופא טראומה' />
+            <span className="hint">אם התייעצת עם גורם שאינו רשום במערכת, שמו יופיע בתשובה ובהודעה לשואל. התשובה נרשמת על שמך.</span>
           </div>
           <label className="check"><input type="checkbox" name="in_kb" defaultChecked={q.status === "answered" ? q.in_kb : true} /> לפרסם במאגר הידע לכל המתנדבים</label>
           <button className="btn">שלח תשובה</button>
