@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { User } from "@/lib/types";
-import { ROLE_LABEL } from "@/lib/types";
+import { APP_NAME, ROLE_LABEL } from "@/lib/types";
 
 const ICONS: Record<string, React.ReactNode> = {
   mine: <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z" /></svg>,
@@ -27,11 +27,15 @@ export default function Shell({ user, active, openCount = 0, children }: { user:
   return (
     <div className="app">
       <header className="top">
-        <div>
-          <h1>תיבת הדילמות</h1>
+        <div className="brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="איחוד הצלה" />
+          <div>
+          <h1>{APP_NAME}</h1>
           <div className="who">
             {user.name} · {ROLE_LABEL[user.role]}
             {user.team ? ` · ${user.team}` : ""} · <Link href="/me">הגדרות</Link>
+          </div>
           </div>
         </div>
       </header>
