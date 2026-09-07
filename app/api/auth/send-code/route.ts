@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   });
   if (insErr) return NextResponse.json({ error: "שגיאת מסד נתונים בשמירת הקוד: " + insErr.message }, { status: 500 });
 
-  const res = await sendSms(phone, `קוד הכניסה שלך לתיבת הדילמות: ${code}\nתקף ל-${OTP_TTL_MINUTES} דקות.`);
+  const res = await sendSms(phone, `קוד הכניסה שלך ל"אני רק שאלה...": ${code}\nתקף ל-${OTP_TTL_MINUTES} דקות.`);
   await db().from("notifications").insert({
     channel: "sms",
     destination: phone,
