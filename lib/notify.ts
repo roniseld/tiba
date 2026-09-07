@@ -36,7 +36,7 @@ export async function notifyUser(user: Pick<User, "id" | "phone" | "email" | "no
     else {
       if (!user.email) continue;
       destination = user.email;
-      res = await sendEmail(user.email, opts.subject || "תיבת הדילמות", opts.text, opts.link);
+      res = await sendEmail(user.email, opts.subject || "אני רק שאלה...", opts.text, opts.link);
     }
     rows.push({
       user_id: user.id,
