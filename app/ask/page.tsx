@@ -1,7 +1,7 @@
 import Shell from "@/components/Shell";
 import { guard } from "@/lib/page-guard";
 import { countOpen } from "@/lib/questions";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, CATEGORY_HINT } from "@/lib/types";
 import { askAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
         <div className="field">
           <label htmlFor="category">נושא</label>
           <select id="category" name="category" required>
-            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_HINT[c] ? `${c} (${CATEGORY_HINT[c]})` : c}</option>)}
           </select>
         </div>
         <div className="field">
